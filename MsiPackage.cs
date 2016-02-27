@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Evil.MsiLauncher
+namespace Nitridan.MsiLauncher
 {
     internal class MsiPackage : IDisposable
     {

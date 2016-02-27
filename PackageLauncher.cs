@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Evil.MsiLauncher
+namespace Nitridan.MsiLauncher
 {
     public static class PackageLauncher
     {
@@ -10,6 +10,7 @@ namespace Evil.MsiLauncher
         {
             using (var package = new MsiPackage(msiPath))
             {
+                var errors = new List<string>();
                 var session = package.Session;
                 session["Installed"] = null;
                 var initialProperties = package.GetRuntimeProperties();
@@ -30,14 +31,15 @@ namespace Evil.MsiLauncher
                         }
                         catch (Exception ex)
                         {
-                            //Console.WriteLine(sequenceItem.Action);
-                            //Console.WriteLine(ex.Message);
+                            errors.Add(ex.Message);
                         }
                     }
                 }
 
                 var finalProperties = package.GetRuntimeProperties();
-                return CompareProperties(initialProperties, finalProperties);
+                var result = CompareProperties(initialProperties, finalProperties);
+                result.Errors = errors;
+                return result;
             }
         }
 

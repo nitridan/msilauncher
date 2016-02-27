@@ -1,24 +1,12 @@
 ﻿{
     "version": "1.0.0-*",
-    "compilationOptions": {
-        "emitEntryPoint": false
-    },
 
     "dependencies": {
         "NETStandard.Library": "1.0.0-rc2-*",
-        "System.Xml.XmlSerializer": "4.0.11-beta-*",
-        "System.Runtime.Serialization.Primitives": "4.1.0-beta-*",
-        "System.Threading.Thread": "4.0.0-beta-*",
-        "System.Collections.NonGeneric": "4.0.1-beta-*",
-        "System.Diagnostics.Process": "4.1.0-rc2-*",
-        "System.Reflection": "4.1.0-beta-*",
-        "System.Runtime.Loader": "4.0.0-beta-*",
         "dtfcoreclr": "*"
     },
 
     "frameworks": {
         "dnxcore50": { }
-    },
-    
-    "compile": "**/*.cs"
+    }
 }

@@ -1,4 +1,4 @@
-﻿namespace Evil.MsiLauncher
+﻿namespace Nitridan.MsiLauncher
 {
     public class PropertyItem
     {

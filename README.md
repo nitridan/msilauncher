@@ -6,7 +6,7 @@ Example usage:
 ```csharp
 using System;
 using System.Linq;
-using Evil.MsiLauncher;
+using Nitridan.MsiLauncher;
 
 namespace ConsoleApplication
 {
