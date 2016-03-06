@@ -2,6 +2,10 @@
 
 Library which I wrote in order to detect installation changes inside MSI when UI installation launched.
 
+Build status:
+
+[![Build Status](https://travis-ci.org/nitridan/msilauncher.svg?branch=master)](https://travis-ci.org/nitridan/msilauncher)
+
 Example usage:
 ```csharp
 using System;
