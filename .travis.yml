@@ -1,0 +1,18 @@
+language: csharp
+branches:
+  only:
+    - master
+sudo: required
+dist: trusty
+before_install:
+  - sudo sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
+  - sudo apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+  - sudo apt-get update -y
+install:
+  - sudo apt-get install dotnet -y
+script:
+  - dotnet restore
+  - dotnet pack -c Release --version-suffix=$TRAVIS_BUILD_NUMBER
+after_success:
+  - curl -O https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+  - 'mono ./nuget.exe push ./bin/Release/Nitridan.MsiLauncher.1.0.0-release-$TRAVIS_BUILD_NUMBER.nupkg -ApiKey $API_KEY -Source https://www.myget.org/F/dtfcoreclr/api/v3/index.json'
