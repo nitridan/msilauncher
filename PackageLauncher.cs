@@ -4,9 +4,14 @@ using System.Linq;
 
 namespace Nitridan.MsiLauncher
 {
-    public static class PackageLauncher
+    public interface IPackageLauncher
     {
-        public static ProcessingResult LaunchMsi(string msiPath)
+        ProcessingResult LaunchMsi(string msiPath);
+    }
+    
+    public class PackageLauncher : IPackageLauncher
+    {
+        public ProcessingResult LaunchMsi(string msiPath)
         {
             using (var package = new MsiPackage(msiPath))
             {
@@ -14,7 +19,7 @@ namespace Nitridan.MsiLauncher
                 var session = package.Session;
                 session["Installed"] = null;
                 var directories = package.GetDirectories();
-                var initialProperties = package.GetRuntimeProperties();
+                var initialProperties = package.GetRuntimeProperties().ToPropertyDictionary();
                 var sequenceItems = package.GetUiSequence()
                     .Where(x => string.IsNullOrWhiteSpace(x.Condition) || session.EvaluateCondition(x.Condition))
                     .TakeWhile(x => x.Action != "ExecuteAction");
@@ -29,42 +34,28 @@ namespace Nitridan.MsiLauncher
                         errors.Add(ex.Message);
                     }
                 }
-
-                var finalProperties = package.GetRuntimeProperties();
-                var result = CompareProperties(initialProperties.ToPropertyDictionary(), finalProperties.ToPropertyDictionary());
-                result.Errors = errors;
-                result.Directories = directories.ToList();
-                return result;
+                
+                var finalProperties = package.GetRuntimeProperties().ToPropertyDictionary();
+                return new ProcessingResult 
+                {
+                    AddedProperties = GetAddedProperties(initialProperties, finalProperties).ToList(),
+                    RemovedProperties = GetAddedProperties(finalProperties, initialProperties).ToList(),
+                    ChangedProperties = GetChangedProperties(initialProperties, finalProperties).ToList(),
+                    Errors = errors,
+                    Directories = directories.ToList(),
+                    Features = package.GetFeatures().ToList()
+                };
             }
         }
-
-        private static ProcessingResult CompareProperties(IDictionary<string, string> initialProperties, 
-            IDictionary<string, string> finalProperties)
-        {
-            var result = new ProcessingResult();
-            var finalKeys = finalProperties.Keys.ToArray();
-            foreach (var key in finalKeys)
-            {
-                var finalProperty = finalProperties[key];
-                var propertyItem = new PropertyItem { Property = key, Value = finalProperty };
-                if (!initialProperties.ContainsKey(key))
-                {
-                    result.AddedProperties.Add(propertyItem);
-                }
-                else
-                {
-                    if (initialProperties[key] != finalProperties[key])
-                    {
-                        result.ChangedProperties.Add(propertyItem);
-                    }
-
-                    initialProperties.Remove(key);
-                }
-            }
-
-            result.RemovedProperties.AddRange(
-                initialProperties.Select(x => new PropertyItem { Property = x.Key, Value = x.Value }));
-            return result;
-        }
+        
+        private static IEnumerable<PropertyItem> GetAddedProperties(IDictionary<string, string> initial,
+            IDictionary<string, string> final)
+            => final.Where(x => !initial.ContainsKey(x.Key))
+                .Select(x => new PropertyItem {Property = x.Key, Value = x.Value});
+                
+        private static IEnumerable<PropertyItem> GetChangedProperties(IDictionary<string, string> initial,
+            IDictionary<string, string> final)
+            => final.Where(x => initial.ContainsKey(x.Key) && x.Value == initial[x.Key])
+                .Select(x => new PropertyItem {Property = x.Key, Value = x.Value});
     }
 }

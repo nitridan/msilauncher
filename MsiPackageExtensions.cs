@@ -7,12 +7,23 @@ namespace Nitridan.MsiLauncher
 {
     public static class MsiPackageExtensions 
     {
+        internal static IEnumerable<FeatureItem> GetFeatures(this MsiPackage package)
+            => GetFeatures(package.Database);
+        
+        public static IEnumerable<FeatureItem> GetFeatures(this Database db)
+            => db.AsQueryable().Features.Select(x => new FeatureItem
+                {
+                   Feature = x.Feature,
+                   FeatureParent = x.Feature_Parent,
+                   Level = x.Level
+                })
+                .ToArray();
+        
         internal static IEnumerable<SequenceItem> GetUiSequence(this MsiPackage package) 
             => GetUiSequence(package.Database);
         
         public static IEnumerable<SequenceItem> GetUiSequence(this Database db)
-        {
-            return db.AsQueryable().InstallUISequences
+            => db.AsQueryable().InstallUISequences
                 .OrderBy(x => x.Sequence)
                 .Where(x => x.Sequence > 0)
                 .Select(x => new SequenceItem
@@ -22,14 +33,12 @@ namespace Nitridan.MsiLauncher
                     Sequence = x.Sequence
                 })
                 .ToArray();
-        }
         
         internal static IEnumerable<DirectoryItem> GetDirectories(this MsiPackage package)
             => GetDirectories(package.Database);
         
         public static IEnumerable<DirectoryItem> GetDirectories(this Database db)
-        {
-            return db.AsQueryable().Directories
+            => db.AsQueryable().Directories
                 .Select(x => new DirectoryItem
                 {
                     Id = x.Directory,
@@ -37,7 +46,6 @@ namespace Nitridan.MsiLauncher
                     Name = x.DefaultDir
                 })
                 .ToArray();
-        }
         
         internal static IEnumerable<PropertyItem> GetRuntimeProperties(this MsiPackage package)
             => GetRuntimeProperties(package.Database);

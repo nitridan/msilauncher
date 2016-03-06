@@ -17,7 +17,8 @@ namespace ConsoleApplication
         [STAThread]
         static void Main(string[] args)
         {
-            var result = PackageLauncher.LaunchMsi(Path);
+            var launcher = new PackageLauncher();
+            var result = launcher.LaunchMsi(Path);
             Console.WriteLine("Changed properties:");
             var changedProperties = result
                 .ChangedProperties
