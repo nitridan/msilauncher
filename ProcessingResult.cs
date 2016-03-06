@@ -9,6 +9,8 @@ namespace Nitridan.MsiLauncher
 
         public List<PropertyItem> RemovedProperties { get; set; }
         
+        public List<DirectoryItem> Directories { get; set; }
+        
         public List<string> Errors { get; set; }
 
         public ProcessingResult()
@@ -16,6 +18,7 @@ namespace Nitridan.MsiLauncher
             ChangedProperties = new List<PropertyItem>();
             AddedProperties = new List<PropertyItem>();
             RemovedProperties = new List<PropertyItem>();
+            Directories = new List<DirectoryItem>();
             Errors = new List<string>();
         }
     }

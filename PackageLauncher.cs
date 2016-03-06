@@ -13,32 +13,27 @@ namespace Nitridan.MsiLauncher
                 var errors = new List<string>();
                 var session = package.Session;
                 session["Installed"] = null;
+                var directories = package.GetDirectories();
                 var initialProperties = package.GetRuntimeProperties();
-                var sequenceItems = package.GetUiSequence();
+                var sequenceItems = package.GetUiSequence()
+                    .Where(x => string.IsNullOrWhiteSpace(x.Condition) || session.EvaluateCondition(x.Condition))
+                    .TakeWhile(x => x.Action != "ExecuteAction");
                 foreach (var sequenceItem in sequenceItems)
                 {
-                    if (sequenceItem.Action == "ExecuteAction")
+                    try
                     {
-                        break;
+                        session.DoAction(sequenceItem.Action);
                     }
-
-                    if (string.IsNullOrWhiteSpace(sequenceItem.Condition) 
-                        || session.EvaluateCondition(sequenceItem.Condition))
+                    catch (Exception ex)
                     {
-                        try
-                        {
-                            session.DoAction(sequenceItem.Action);
-                        }
-                        catch (Exception ex)
-                        {
-                            errors.Add(ex.Message);
-                        }
+                        errors.Add(ex.Message);
                     }
                 }
 
                 var finalProperties = package.GetRuntimeProperties();
-                var result = CompareProperties(initialProperties, finalProperties);
+                var result = CompareProperties(initialProperties.ToPropertyDictionary(), finalProperties.ToPropertyDictionary());
                 result.Errors = errors;
+                result.Directories = directories.ToList();
                 return result;
             }
         }

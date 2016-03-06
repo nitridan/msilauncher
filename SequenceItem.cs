@@ -1,6 +1,6 @@
 ﻿namespace Nitridan.MsiLauncher
 {
-    internal class SequenceItem
+    public class SequenceItem
     {
         public string Action { get; set; }
 

@@ -1,7 +1,5 @@
 ﻿using Microsoft.Deployment.WindowsInstaller;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Nitridan.MsiLauncher
@@ -25,21 +23,9 @@ namespace Nitridan.MsiLauncher
             session = Session.FromHandle(msiHandle, true);
         }
 
-        public Session Session
-        {
-            get
-            {
-                return session;
-            }
-        }
+        public Session Session => session;
 
-        public Database Database
-        {
-            get
-            {
-                return session.Database;
-            }
-        }
+        public Database Database => session.Database;
 
         public void Dispose()
         {
@@ -48,44 +34,6 @@ namespace Nitridan.MsiLauncher
                 NativeMethods.MsiCloseHandle(msiHandle);
             }
         }
-
-        public IDictionary<string, string> GetRuntimeProperties()
-        {
-            var properties = new Dictionary<string, string>();
-            using (var view = session.Database.OpenView("SELECT * FROM `_Property`"))
-            {
-                view.Execute();
-                foreach (var record in view)
-                {
-                    properties.Add(record[1].ToString(), record[2].ToString());
-                }
-            }
-
-            return properties;
-        }
-
-        public SequenceItem[] GetUiSequence()
-        {
-            SequenceItem[] sequenceItems;
-            using (var view = session.Database.OpenView("SELECT * FROM `InstallUISequence` ORDER BY `Sequence`"))
-            {
-                view.Execute();
-                sequenceItems = view.Select(x =>
-                {
-                    int sequence;
-                    return new SequenceItem
-                    {
-                        Action = x["Action"].ToString(),
-                        Condition = x["Condition"].ToString(),
-                        Sequence = int.TryParse(x["Sequence"].ToString(), out sequence) ? sequence : 0
-                    };
-                }).Where(x => x.Sequence > 0).ToArray();
-            }
-
-            return sequenceItems;
-        }
-
-        #region Native methods
 
         private static class NativeMethods
         {
@@ -112,7 +60,5 @@ namespace Nitridan.MsiLauncher
                 INSTALLUILEVEL_SOURCERESONLY = 0x100, // force display of source resolution even if quiet
             }
         }
-
-        #endregion
     }
 }
