@@ -1,3 +1,5 @@
+using Microsoft.Deployment.WindowsInstaller;
+
 namespace Nitridan.MsiLauncher
 {
     public class FeatureItem
@@ -7,5 +9,7 @@ namespace Nitridan.MsiLauncher
         public string FeatureParent { get; set; }
         
         public int Level { get; set; }
+        
+        public InstallState InstallState { get; set; }
     }
 }

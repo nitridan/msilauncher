@@ -1,5 +1,6 @@
 ﻿using Microsoft.Deployment.WindowsInstaller;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Nitridan.MsiLauncher
@@ -12,12 +13,17 @@ namespace Nitridan.MsiLauncher
 
         public MsiPackage(string msiPath)
         {
+            if (!File.Exists(msiPath))
+            {
+                throw new ArgumentException(nameof(msiPath), "Invalid path provided, file doesn't exist!");    
+            }
+            
             var uiHandle = IntPtr.Zero;
             NativeMethods.MsiSetInternalUI(NativeMethods.INSTALLUILEVEL.INSTALLUILEVEL_FULL, ref uiHandle);
             var error = NativeMethods.MsiOpenPackageW(msiPath, out msiHandle);
             if (error != 0)
             {
-                throw new Exception("Invalid MSI");
+                throw new ArgumentException("Path to Invalid MSI provided!");
             }
 
             session = Session.FromHandle(msiHandle, true);

@@ -35,6 +35,10 @@ namespace Nitridan.MsiLauncher
                     }
                 }
                 
+                var features = package.GetFeatures().Select(x => {
+                    x.InstallState = session.Features[x.Feature].RequestState;
+                    return x;
+                }).ToList();
                 var finalProperties = package.GetRuntimeProperties().ToPropertyDictionary();
                 return new ProcessingResult 
                 {
@@ -43,7 +47,7 @@ namespace Nitridan.MsiLauncher
                     ChangedProperties = GetChangedProperties(initialProperties, finalProperties).ToList(),
                     Errors = errors,
                     Directories = directories.ToList(),
-                    Features = package.GetFeatures().ToList()
+                    Features = features
                 };
             }
         }
