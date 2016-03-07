@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Deployment.WindowsInstaller;
 
 namespace Nitridan.MsiLauncher
 {
@@ -35,10 +36,6 @@ namespace Nitridan.MsiLauncher
                     }
                 }
                 
-                var features = package.GetFeatures().Select(x => {
-                    x.InstallState = session.Features[x.Feature].RequestState;
-                    return x;
-                }).ToList();
                 var finalProperties = package.GetRuntimeProperties().ToPropertyDictionary();
                 return new ProcessingResult 
                 {
@@ -47,10 +44,18 @@ namespace Nitridan.MsiLauncher
                     ChangedProperties = GetChangedProperties(initialProperties, finalProperties).ToList(),
                     Errors = errors,
                     Directories = directories.ToList(),
-                    Features = features
+                    Features = PopulateStates(package.GetFeatures(), session).ToList()
                 };
             }
         }
+        
+        private static IEnumerable<FeatureItem> PopulateStates(IEnumerable<FeatureItem> features, Session session)
+            => features.Select(x => {
+                var feature = session.Features[x.Feature];
+                    x.InstallState = feature.CurrentState;
+                    x.ActionState = feature.RequestState;
+                    return x;
+            });
         
         private static IEnumerable<PropertyItem> GetAddedProperties(IDictionary<string, string> initial,
             IDictionary<string, string> final)

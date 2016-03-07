@@ -11,5 +11,7 @@ namespace Nitridan.MsiLauncher
         public int Level { get; set; }
         
         public InstallState InstallState { get; set; }
+        
+        public InstallState ActionState { get; set; }        
     }
 }
