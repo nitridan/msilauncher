@@ -32,7 +32,7 @@ namespace Nitridan.MsiLauncher
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(ex.Message);
+                        errors.Add($"Action '{sequenceItem.Action}' failed with message: '{ex.Message}'");
                     }
                 }
                 
