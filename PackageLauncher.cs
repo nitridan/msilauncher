@@ -10,13 +10,30 @@ namespace Nitridan.MsiLauncher
         ProcessingResult LaunchMsi(string msiPath);
     }
     
-    public class PackageLauncher : IPackageLauncher
+    internal interface IActionResult
     {
+    }
+    
+    internal class ActionError : IActionResult
+    {
+        public string Message { get; set; }
+    }
+    
+    internal class ActionExecuted : IActionResult
+    {
+    }
+    
+    internal class ActionCostsFinalized : IActionResult
+    {
+        public IDictionary<string, string> Properties { get; set; }
+    }
+    
+    public class PackageLauncher : IPackageLauncher
+    {        
         public ProcessingResult LaunchMsi(string msiPath)
         {
             using (var package = new MsiPackage(msiPath))
             {
-                var errors = new List<string>();
                 var session = package.Session;
                 session["Installed"] = null;
                 var directories = package.GetDirectories();
@@ -24,31 +41,56 @@ namespace Nitridan.MsiLauncher
                 var sequenceItems = package.GetUiSequence()
                     .Where(x => string.IsNullOrWhiteSpace(x.Condition) || session.EvaluateCondition(x.Condition))
                     .TakeWhile(x => x.Action != "ExecuteAction");
-                foreach (var sequenceItem in sequenceItems)
-                {
-                    try
-                    {
-                        session.DoAction(sequenceItem.Action);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Add($"Action '{sequenceItem.Action}' failed with message: '{ex.Message}'");
-                    }
-                }
-                
+                var results = sequenceItems.Select(x => ExecuteAction(package, x.Action)).ToArray();                
                 var finalProperties = package.GetRuntimeProperties().ToPropertyDictionary();
-                return new ProcessingResult 
+                var result = new ProcessingResult 
                 {
                     AddedProperties = GetAddedProperties(initialProperties, finalProperties).ToList(),
-                    RemovedProperties = GetAddedProperties(finalProperties, initialProperties).ToList(),
                     ChangedProperties = GetChangedProperties(initialProperties, finalProperties).ToList(),
-                    Errors = errors,
+                    Errors = results.OfType<ActionError>().Select(x => x.Message).ToList(),
                     Directories = directories.ToList(),
                     Features = PopulateStates(package.GetFeatures(), session).ToList()
                 };
+                
+                var initialDirectories = results.OfType<ActionCostsFinalized>().SingleOrDefault();
+                if (initialDirectories != null)
+                {
+                    result.ChangedDirectories = GetChangedDirectoryProperties(initialDirectories.Properties, 
+                                                                                 finalProperties, directories).ToList();     
+                }
+               
+                return result;
             }
         }
         
+        private static IActionResult ExecuteAction(MsiPackage package, string name)
+        {
+            try
+            {
+                package.Session.DoAction(name);
+                return name != "CostFinalize"
+                    ? (IActionResult)new ActionExecuted()
+                    : new ActionCostsFinalized { Properties = package.GetRuntimeProperties().ToPropertyDictionary() };
+            }
+            catch (Exception ex)
+            {
+                return new ActionError {Message = $"Action '{name}' failed with message: '{ex.Message}'"};
+            }
+        }
+        
+        private static IEnumerable<PropertyItem> GetChangedDirectoryProperties(IDictionary<string, string> initial, 
+            IDictionary<string, string> updated,
+            IEnumerable<DirectoryItem> directories)
+            {
+                var directorySet = directories.Select(x => x.Id).ToSet();
+                var directoryDictionary =  initial
+                    .Where(x => directorySet.Contains(x.Key))
+                    .ToDictionary(x => x.Key, x => x.Value);
+                
+               return updated.Where(x => directoryDictionary.ContainsKey(x.Key) && x.Value != directoryDictionary[x.Key])
+                .Select(x => new PropertyItem{Property = x.Key, Value = x.Value});
+            }
+            
         private static IEnumerable<FeatureItem> PopulateStates(IEnumerable<FeatureItem> features, Session session)
             => features.Select(x => {
                 var feature = session.Features[x.Feature];

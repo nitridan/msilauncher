@@ -7,7 +7,7 @@ namespace Nitridan.MsiLauncher
 
         public List<PropertyItem> AddedProperties { get; set; }
 
-        public List<PropertyItem> RemovedProperties { get; set; }
+        public List<PropertyItem> ChangedDirectories { get; set; }
         
         public List<DirectoryItem> Directories { get; set; }
         
@@ -19,7 +19,7 @@ namespace Nitridan.MsiLauncher
         {
             ChangedProperties = new List<PropertyItem>();
             AddedProperties = new List<PropertyItem>();
-            RemovedProperties = new List<PropertyItem>();
+            ChangedDirectories = new List<PropertyItem>();
             Directories = new List<DirectoryItem>();
             Features = new List<FeatureItem>();
             Errors = new List<string>();
