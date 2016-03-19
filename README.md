@@ -6,6 +6,8 @@ Build status:
 
 [![Build Status](https://travis-ci.org/nitridan/msilauncher.svg?branch=master)](https://travis-ci.org/nitridan/msilauncher)
 
+Original source code here: https://github.com/wixtoolset/wix3
+
 Example usage:
 ```csharp
 using System;
